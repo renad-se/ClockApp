@@ -1,0 +1,106 @@
+package app.model;
+
+import java.beans.PropertyChangeListener;
+import java.beans.PropertyChangeSupport;
+
+/*
+AF:
+    Represents a countdown timer with:
+        - duration: full configured time
+        - remaining: time left
+        - running: true when timer is active
+
+RI:
+    duration != null
+    remaining != null
+    remaining <= duration
+*/
+
+public class TimerModel {
+
+    private TimeSpan duration = new TimeSpan(0, 0);
+    private TimeSpan remaining = new TimeSpan(0, 0);
+    private boolean running = false;
+    private final PropertyChangeSupport pcs = new PropertyChangeSupport(this);
+
+    private void checkRep() {
+        if (duration == null || remaining == null)
+            throw new AssertionError("Timer RI violated");
+
+        if (remaining.toTotalSeconds() > duration.toTotalSeconds())
+            throw new AssertionError("Remaining > Duration");
+    }
+
+    /** Configure the timer duration. */
+    public void configure(TimeSpan d) {
+        TimeSpan old = remaining;
+
+        duration = d;
+        remaining = d;
+        running = false;
+
+        checkRep();
+        pcs.firePropertyChange("remaining", old, remaining);
+    }
+
+    /** Tick one second down. Fires "finished" event when 0. */
+    public void tick() {
+        if (!running) return;
+
+        int total = remaining.toTotalSeconds();
+
+        if (total > 0) {
+            TimeSpan old = remaining;
+            total -= 1;
+            remaining = new TimeSpan(total / 60, total % 60);
+            pcs.firePropertyChange("remaining", old, remaining);
+        }
+
+        if (remaining.toTotalSeconds() == 0 && running) {
+            running = false;
+            pcs.firePropertyChange("finished", false, true);
+        }
+    }
+    /**
+     * Starts the timer countdown.
+     * @requires remainingTime > 0
+     * @modifies this
+     * @effects running is set to true
+     */
+    public void start() {
+        boolean old = running;
+        running = true;
+        pcs.firePropertyChange("running", old, running);
+    }
+
+    /**
+     * Stops the timer.
+     * @requires running
+     * @modifies this
+     * @effects running is set to false
+     */
+    public void pause() {
+        boolean old = running;
+        running = false;
+        pcs.firePropertyChange("running", old, running);
+    }
+
+    /**
+     * Resets timer to full duration.
+     * @modifies this
+     * @effects remainingTime is set equal to duration
+     */
+    public void reset() {
+        TimeSpan old = remaining;
+        remaining = duration;
+        pcs.firePropertyChange("remaining", old, remaining);
+    }
+
+    /** @return remaining time as immutable TimeSpan */
+    public TimeSpan getRemaining() {
+        return remaining;
+    }
+
+    public void addListener(PropertyChangeListener l) { pcs.addPropertyChangeListener(l); }
+    public void removeListener(PropertyChangeListener l) { pcs.removePropertyChangeListener(l); }
+}

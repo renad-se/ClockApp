@@ -1,0 +1,72 @@
+package app.model;
+
+import java.beans.PropertyChangeListener;
+import java.beans.PropertyChangeSupport;
+import java.time.LocalDateTime;
+
+/*
+AF:
+    Represents a real-time clock whose state is the system time
+    stored in the field `now`.
+
+RI:
+    now != null
+*/
+
+/**
+ * A mutable clock model.
+ * Uses the Observer pattern via PropertyChangeSupport.
+ *
+ * @specfield now : LocalDateTime // current system time
+ */
+public class ClockModel {
+
+    private LocalDateTime now = LocalDateTime.now();
+    private final PropertyChangeSupport pcs = new PropertyChangeSupport(this);
+
+    /**
+     * Returns the current time.
+     *
+     * @return LocalDateTime snapshot of now
+     * @effects does not modify the clock state
+     */
+    public LocalDateTime getNow() {
+        return now;
+    }
+
+    /**
+     * Updates clock time from the system clock and notifies listeners.
+     *
+     * @modifies this
+     * @effects now = LocalDateTime.now()
+     */
+    public void tick() {
+        LocalDateTime old = this.now;
+        this.now = LocalDateTime.now();
+        pcs.firePropertyChange("now", old, this.now);
+    }
+
+    /**
+     * Registers a listener.
+     *
+     * @param l listener to add
+     * @requires l != null
+     * @modifies this
+     * @effects adds l to observer list
+     */
+    public void addListener(PropertyChangeListener l) {
+        pcs.addPropertyChangeListener(l);
+    }
+
+    /**
+     * Removes a listener.
+     *
+     * @param l listener to remove
+     * @requires l != null
+     * @modifies this
+     * @effects removes l from observer list
+     */
+    public void removeListener(PropertyChangeListener l) {
+        pcs.removePropertyChangeListener(l);
+    }
+}

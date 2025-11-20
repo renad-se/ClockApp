@@ -1,0 +1,29 @@
+package app.infra;
+
+import java.io.*;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.*;
+
+/**
+ * Simple storage singleton for saving/loading settings.
+ */
+public class Storage {
+    private static final Storage INSTANCE = new Storage();
+    private Storage() {}
+    public static Storage getInstance() { return INSTANCE; }
+
+    public void saveSettings(Path file) throws IOException {
+        try (Writer w = new OutputStreamWriter(Files.newOutputStream(file), StandardCharsets.UTF_8)) {
+            w.write("use12Hour=" + SettingsManager.getInstance().isUse12Hour());
+        }
+    }
+
+    public void loadSettings(Path file) throws IOException {
+        if (!Files.exists(file)) return;
+        for (String line : Files.readAllLines(file, StandardCharsets.UTF_8)) {
+            if (line.startsWith("use12Hour=")) {
+                SettingsManager.getInstance().setUse12Hour(Boolean.parseBoolean(line.substring("use12Hour=".length())));
+            }
+        }
+    }
+}

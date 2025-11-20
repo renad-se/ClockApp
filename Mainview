@@ -1,0 +1,151 @@
+package app.view;
+
+import app.controller.MainController;
+import app.model.ClockModel;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
+import java.beans.PropertyChangeEvent;
+import java.beans.PropertyChangeListener;
+import javafx.application.Platform;
+import javafx.geometry.Insets;
+import javafx.scene.Scene;
+import javafx.scene.control.*;
+import javafx.scene.layout.*;
+import javafx.stage.Stage;
+
+public class MainView implements PropertyChangeListener {
+
+    private final MainController controller;
+    private final ClockModel clock;
+
+    private Label clockLabel;
+    private Label timerLabel;
+    private Label stopwatchLabel;
+
+    public MainView(MainController controller, ClockModel clock) {
+        this.controller = controller;
+        this.clock = clock;
+
+        clock.addListener(this);
+        controller.timer.addListener(this);
+        controller.stopwatch.addListener(this);
+    }
+
+    public void start(Stage stage) {
+
+        TabPane tabs = new TabPane();
+        tabs.getTabs().add(clockTab());
+        tabs.getTabs().add(timerTab());
+        tabs.getTabs().add(stopwatchTab());
+
+        Scene scene = new Scene(tabs, 500, 350);
+        stage.setScene(scene);
+        stage.setTitle("ClockApp");
+        stage.show();
+    }
+
+    private Tab clockTab() {
+        Tab t = new Tab("Clock");
+        t.setClosable(false);
+
+        clockLabel = new Label("--:--:--");
+        clockLabel.setStyle("-fx-font-size: 32px;");
+
+        Button toggle = new Button("Toggle 12/24");
+        toggle.setOnAction(e -> {
+            var s = app.infra.SettingsManager.getInstance();
+            s.setUse12Hour(!s.isUse12Hour());
+        });
+
+        VBox box = new VBox(15, clockLabel, toggle);
+        box.setPadding(new Insets(20));
+        t.setContent(box);
+
+        updateClockUI(clock.getNow());
+        return t;
+    }
+
+    private Tab timerTab() {
+        Tab t = new Tab("Timer");
+        t.setClosable(false);
+
+        timerLabel = new Label("00:00");
+        timerLabel.setStyle("-fx-font-size: 28px;");
+
+        TextField secondsField = new TextField();
+        secondsField.setPromptText("Enter seconds");
+
+        Button set = new Button("Set");
+        set.setOnAction(e -> {
+            try {
+                long sec = Long.parseLong(secondsField.getText());
+                controller.configureTimer(sec);
+            } catch (Exception ignored) {}
+        });
+
+        Button start = new Button("Start");
+        start.setOnAction(e -> controller.startTimer());
+
+        Button pause = new Button("Pause");
+        pause.setOnAction(e -> controller.pauseTimer());
+
+        Button reset = new Button("Reset");
+        reset.setOnAction(e -> controller.resetTimer());
+
+        HBox buttons = new HBox(10, set, start, pause, reset);
+        VBox box = new VBox(15, timerLabel, secondsField, buttons);
+        box.setPadding(new Insets(20));
+
+        t.setContent(box);
+        return t;
+    }
+
+    private Tab stopwatchTab() {
+        Tab t = new Tab("Stopwatch");
+        t.setClosable(false);
+
+        stopwatchLabel = new Label("00:00");
+        stopwatchLabel.setStyle("-fx-font-size: 28px;");
+
+        Button start = new Button("Start");
+        start.setOnAction(e -> controller.stopwatchStart());
+
+        Button stop = new Button("Stop");
+        stop.setOnAction(e -> controller.stopwatchStop());
+
+        Button reset = new Button("Reset");
+        reset.setOnAction(e -> controller.stopwatchReset());
+
+        HBox controls = new HBox(10, start, stop, reset);
+        VBox box = new VBox(15, stopwatchLabel, controls);
+        box.setPadding(new Insets(20));
+
+        t.setContent(box);
+        return t;
+    }
+
+    @Override
+    public void propertyChange(PropertyChangeEvent evt) {
+        switch (evt.getPropertyName()) {
+            case "now":
+                Platform.runLater(() -> updateClockUI((LocalDateTime) evt.getNewValue()));
+                break;
+
+            case "remaining":
+                Platform.runLater(() -> timerLabel.setText(evt.getNewValue().toString()));
+                break;
+
+            case "elapsed":
+                Platform.runLater(() -> stopwatchLabel.setText(evt.getNewValue().toString()));
+                break;
+        }
+    }
+
+    private void updateClockUI(LocalDateTime t) {
+        DateTimeFormatter fmt = app.infra.SettingsManager.getInstance().isUse12Hour()
+                ? DateTimeFormatter.ofPattern("hh:mm:ss a")
+                : DateTimeFormatter.ofPattern("HH:mm:ss");
+
+        clockLabel.setText(t.format(fmt));
+    }
+}

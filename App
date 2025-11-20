@@ -1,0 +1,21 @@
+package app;
+
+import app.controller.MainController;
+import app.model.ClockModel;
+import app.view.MainView;
+import javafx.application.Application;
+import javafx.stage.Stage;
+
+public class App extends Application {
+    @Override
+    public void start(Stage stage) {
+        ClockModel clock = new ClockModel();
+        MainController controller = new MainController(clock);
+        MainView view = new MainView(controller, clock);
+        view.start(stage);
+    }
+
+    public static void main(String[] args) {
+        Application.launch(args);
+    }
+}

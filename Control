@@ -1,0 +1,46 @@
+package app.controller;
+
+import app.model.*;
+import javafx.animation.KeyFrame;
+import javafx.animation.Timeline;
+import javafx.util.Duration;
+
+public class MainController {
+
+    public final ClockModel clock;
+    public final TimerModel timer = new TimerModel();
+    public final StopwatchModel stopwatch = new StopwatchModel();
+
+    private final Timeline ticker = new Timeline(new KeyFrame(Duration.seconds(1), e -> onTick()));
+
+    public MainController(ClockModel clock) {
+        this.clock = clock;
+
+        ticker.setCycleCount(Timeline.INDEFINITE);
+        ticker.play();
+    }
+
+    private void onTick() {
+        clock.tick();
+        timer.tick();
+        stopwatch.tick();
+    }
+
+    //  TIMER API
+
+    public void configureTimer(long seconds) {
+        // convert seconds → TimeSpan BEFORE sending to model
+        TimeSpan ts = new TimeSpan((int)(seconds / 60), (int)(seconds % 60));
+        timer.configure(ts);
+    }
+
+    public void startTimer() { timer.start(); }
+    public void pauseTimer() { timer.pause(); }
+    public void resetTimer() { timer.reset(); }
+
+    // STOPWATCH API
+
+    public void stopwatchStart() { stopwatch.start(); }
+    public void stopwatchStop() { stopwatch.stop(); }
+    public void stopwatchReset() { stopwatch.reset(); }
+}

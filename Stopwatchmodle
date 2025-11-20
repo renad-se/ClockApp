@@ -1,0 +1,89 @@
+package app.model;
+
+import java.beans.PropertyChangeListener;
+import java.beans.PropertyChangeSupport;
+
+/*
+AF:
+    Represents a stopwatch with:
+        - elapsed: TimeSpan representing elapsed time
+        - running: true if stopwatch is active
+        - listeners: observers notified on each update
+
+RI:
+    elapsed != null
+*/
+
+public class StopwatchModel {
+
+    private TimeSpan elapsed = new TimeSpan(0, 0);
+    private boolean running = false;
+    private final PropertyChangeSupport pcs = new PropertyChangeSupport(this);
+
+    private void checkRep() {
+        if (elapsed == null)
+            throw new AssertionError("Stopwatch RI violated");
+    }
+
+    /**
+     * Increments elapsed time by 1 second.
+     * @requires running == true
+     * @modifies this
+     * @effects updates the elapsed TimeSpan
+     */
+    public void tick() {
+        if (!running) return;
+
+        int total = elapsed.toTotalSeconds() + 1;
+        TimeSpan old = elapsed;
+        elapsed = new TimeSpan(total / 60, total % 60);
+
+        checkRep();
+        pcs.firePropertyChange("elapsed", old, elapsed);
+    }
+
+    /**
+     * Starts the stopwatch.
+     * @requires !running
+     * @modifies this
+     * @effects sets running to true and begins counting time
+     */
+    public void start() {
+        boolean old = running;
+        running = true;
+        pcs.firePropertyChange("running", old, running);
+    }
+
+    /**
+     * Stops the stopwatch.
+     * @requires running
+     * @modifies this
+     * @effects sets running to false
+     */
+    public void stop() {
+        boolean old = running;
+        running = false;
+        pcs.firePropertyChange("running", old, running);
+    }
+
+    /**
+     * Resets the stopwatch to zero.
+     * @modifies this
+     * @effects sets currentTime to 0:00
+     */
+    public void reset() {
+        TimeSpan old = elapsed;
+        elapsed = new TimeSpan(0, 0);
+        pcs.firePropertyChange("elapsed", old, elapsed);
+    }
+
+    /**
+     * @return current elapsed time (immutable)
+     */
+    public TimeSpan getTime() {
+        return elapsed;
+    }
+
+    public void addListener(PropertyChangeListener l) { pcs.addPropertyChangeListener(l); }
+    public void removeListener(PropertyChangeListener l) { pcs.removePropertyChangeListener(l); }
+}

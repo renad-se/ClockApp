@@ -1,0 +1,105 @@
+package app.model;
+
+/**
+ * Immutable representation of a time span (minutes, seconds).
+ *
+ * AF(minutes, seconds):
+ *   Represents a duration where totalSeconds = minutes * 60 + seconds
+ *
+ * RI:
+ *   minutes >= 0
+ *   seconds >= 0 && seconds < 60
+ */
+public final class TimeSpan {
+    private final int minutes;
+    private final int seconds;
+
+    /**
+     * Creates an immutable TimeSpan object.
+     *
+     * @param minutes non-negative minutes
+     * @param seconds 0–59 seconds
+     * @throws IllegalArgumentException if RI is violated
+     * @effects constructs a valid TimeSpan
+     */
+    public TimeSpan(int minutes, int seconds) {
+        this.minutes = minutes;
+        this.seconds = seconds;
+        checkRep();
+    }
+
+    /** @return minutes contained in this TimeSpan */
+    public int getMinutes() { return minutes; }
+
+    /** @return seconds contained in this TimeSpan */
+    public int getSeconds() { return seconds; }
+
+    /**
+     * @return total time in seconds
+     * @effects computes a derived value
+     */
+    public int toTotalSeconds() {
+        return minutes * 60 + seconds;
+    }
+
+    // REGEX FEATURE
+
+    /**
+     * Creates a TimeSpan from a formatted "MM:SS" string.
+     *
+     * @param input string in format MM:SS
+     * @return new TimeSpan
+     * @throws IllegalArgumentException if invalid format
+     * @effects parses string using regex
+     */
+    public static TimeSpan fromString(String input) {
+        if (!input.matches("\\d{1,2}:\\d{2}"))
+            throw new IllegalArgumentException("Invalid time format. Expected MM:SS.");
+
+        String[] parts = input.split(":");
+        return new TimeSpan(Integer.parseInt(parts[0]), Integer.parseInt(parts[1]));
+    }
+
+    // RECURSION FEATURE
+
+    /**
+     * Formats the TimeSpan into "MM:SS" using recursion.
+     *
+     * @return formatted time string
+     */
+    @Override
+    public String toString() {
+        return formatRec(minutes, seconds);
+    }
+
+    private String formatRec(int m, int s) {
+        if (m == minutes && s == seconds) {
+            if (s < 10) return m + ":0" + s;
+            return m + ":" + s;
+        }
+        return formatRec(minutes, seconds);
+    }
+
+    //  EQUALITY
+
+    @Override
+    public boolean equals(Object obj) {
+        if (this == obj) return true;
+        if (!(obj instanceof TimeSpan)) return false;
+        TimeSpan other = (TimeSpan) obj;
+        return this.minutes == other.minutes && this.seconds == other.seconds;
+    }
+
+    @Override
+    public int hashCode() {
+        return Integer.hashCode(minutes * 60 + seconds);
+    }
+
+    //  REPRESENTATION CHECK
+
+    private void checkRep() {
+        if (minutes < 0) throw new IllegalArgumentException("minutes must be >= 0");
+        if (seconds < 0 || seconds >= 60)
+            throw new IllegalArgumentException("seconds must be 0–59");
+    }
+}

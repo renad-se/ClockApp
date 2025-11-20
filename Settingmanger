@@ -1,0 +1,51 @@
+package app.infra;
+
+/**
+ * Settings manager for the application.
+ * Implements the Singleton pattern.
+ *
+ * AF:
+ *     Represents the app settings, currently:
+ *         use12Hour : boolean
+ *
+ * RI:
+ *     true 
+ */
+public class SettingsManager {
+
+    private static final SettingsManager INSTANCE = new SettingsManager();
+
+    private boolean use12Hour = false; // default: 24-hour mode
+
+    /** Private constructor for Singleton. */
+    private SettingsManager() {}
+
+    /**
+     * Returns the single shared instance of the settings manager.
+     *
+     * @return SettingsManager (singleton)
+     */
+    public static SettingsManager getInstance() {
+        return INSTANCE;
+    }
+
+    /**
+     * Checks whether the app is using 12-hour mode.
+     *
+     * @return true if 12-hour mode is enabled
+     */
+    public boolean isUse12Hour() {
+        return use12Hour;
+    }
+
+    /**
+     * Sets whether to use 12-hour mode.
+     *
+     * @param v true for 12-hour mode, false for 24-hour mode
+     * @modifies this
+     * @effects updates the stored preference
+     */
+    public void setUse12Hour(boolean v) {
+        this.use12Hour = v;
+    }
+}
